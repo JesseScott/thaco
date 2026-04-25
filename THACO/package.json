@@ -7,9 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test ./src/thaco.test.js"
+    "test": "node --test ./src/thaco.test.js",
+    "test:ui": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "vite": "^8.0.10"
   },
   "dependencies": {
