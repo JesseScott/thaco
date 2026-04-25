@@ -8,7 +8,7 @@ app.innerHTML = `
   <main class="panel">
     <header class="hero-panel">
       <h1>THACO Calculator</h1>
-      <p>Enter your THAC0, target Armor Class, and attack bonus to calculate.</p>
+      <p>Enter your THAC0, target AC, and attack bonus to calculate.</p>
     </header>
 
     <div class="section-divider"></div>
@@ -52,6 +52,7 @@ app.innerHTML = `
 
           <div class="actions">
             <button id="roll-btn" type="button">Roll d20</button>
+            <button id="reset-btn" type="button">Reset</button>
           </div>
         </div>
       </div>
@@ -71,6 +72,7 @@ const thacoInput = document.getElementById('thaco-input')
 const acInput = document.getElementById('ac-input')
 const bonusInput = document.getElementById('bonus-input')
 const rollBtn = document.getElementById('roll-btn')
+const resetBtn = document.getElementById('reset-btn')
 const resultValue = document.getElementById('result-value')
 const resultLabel = document.getElementById('result-label')
 const rollOutput = document.getElementById('roll-output')
@@ -146,11 +148,25 @@ function rollD20() {
   }
 }
 
+function resetInputs() {
+  thacoInput.value = '20'
+  acInput.value = '10'
+  bonusInput.value = '0'
+  manualRollInput.value = '10'
+  modeToggle.checked = false
+  toggleMode()
+  rollOutput.classList.add('empty')
+  rollValue.textContent = '-'
+  rollResult.textContent = '-'
+  rollResult.classList.remove('hit', 'miss')
+}
+
 thacoInput.addEventListener('input', updateResults)
 acInput.addEventListener('input', updateResults)
 bonusInput.addEventListener('input', updateResults)
 manualRollInput.addEventListener('input', updateResults)
 modeToggle.addEventListener('change', toggleMode)
 rollBtn.addEventListener('click', rollD20)
+resetBtn.addEventListener('click', resetInputs)
 
 updateResults()
