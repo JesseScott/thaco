@@ -8,12 +8,17 @@ app.innerHTML = `
   <main class="panel">
     <header class="hero-panel">
       <h1>THACO Calculator</h1>
-      <p>Enter your THAC0, target Armor Class, and attack bonus to calculate the roll threshold.</p>
+      <p>Enter your THAC0, target Armor Class, and attack bonus to calculate.</p>
     </header>
 
     <div class="section-divider"></div>
 
     <form id="calculator" class="calculator" autocomplete="off">
+      <label class="mode-toggle">
+        <input id="mode-toggle" type="checkbox" />
+        <span>Calculate hit AC instead</span>
+      </label>
+
       <div class="form-grid">
         <div class="input-group">
           <label class="field">
@@ -21,9 +26,14 @@ app.innerHTML = `
             <input id="thaco-input" type="number" value="20" min="-20" step="1" />
           </label>
 
-          <label class="field">
+          <label class="field" id="ac-field">
             <span>Armor Class</span>
             <input id="ac-input" type="number" value="10" min="-20" step="1" />
+          </label>
+
+          <label class="field" id="manual-roll-field" style="display: none;">
+            <span>Roll</span>
+            <input id="manual-roll-input" type="number" value="10" min="1" max="20" step="1" />
           </label>
 
           <label class="field">
@@ -35,8 +45,8 @@ app.innerHTML = `
         <div class="action-group">
           <div class="results">
             <div class="result-row">
-              <span>Needed roll</span>
-              <strong id="needed-value">-</strong>
+              <span id="result-label">Target</span>
+              <strong id="result-value">-</strong>
             </div>
           </div>
 
@@ -61,41 +71,86 @@ const thacoInput = document.getElementById('thaco-input')
 const acInput = document.getElementById('ac-input')
 const bonusInput = document.getElementById('bonus-input')
 const rollBtn = document.getElementById('roll-btn')
-const neededValue = document.getElementById('needed-value')
+const resultValue = document.getElementById('result-value')
+const resultLabel = document.getElementById('result-label')
 const rollOutput = document.getElementById('roll-output')
 const rollValue = document.getElementById('roll-value')
 const rollResult = document.getElementById('roll-result')
+const modeToggle = document.getElementById('mode-toggle')
+const manualRollInput = document.getElementById('manual-roll-input')
+const acField = document.getElementById('ac-field')
+const manualRollField = document.getElementById('manual-roll-field')
 
 function updateResults() {
   const thaco = Number(thacoInput.value)
-  const ac = Number(acInput.value)
   const bonus = Number(bonusInput.value)
-  const needed = clamp(calculateThreshold(thaco, ac, bonus), 1, 20)
+  const isHitAcMode = modeToggle.checked
 
-  neededValue.textContent = `${needed}`
+  if (isHitAcMode) {
+    const roll = Number(manualRollInput.value)
+    const ac = thaco - bonus - roll
+    resultValue.textContent = `${ac}`
+  } else {
+    const ac = Number(acInput.value)
+    const needed = clamp(calculateThreshold(thaco, ac, bonus), 1, 20)
+    resultValue.textContent = `${needed}`
+  }
+}
+
+function toggleMode() {
+  const isHitAcMode = modeToggle.checked
+  if (isHitAcMode) {
+    acField.style.display = 'none'
+    manualRollField.style.display = 'block'
+    resultLabel.textContent = 'Hits AC'
+    rollBtn.textContent = 'Roll d20'
+  } else {
+    acField.style.display = 'block'
+    manualRollField.style.display = 'none'
+    resultLabel.textContent = 'Target'
+    rollBtn.textContent = 'Roll d20'
+  }
+  updateResults()
 }
 
 function rollD20() {
-  const thaco = Number(thacoInput.value)
-  const ac = Number(acInput.value)
-  const bonus = Number(bonusInput.value)
-  const threshold = calculateThreshold(thaco, ac, bonus)
-  const needed = clamp(threshold, 1, 20)
-  const roll = Math.floor(Math.random() * 20) + 1
-  const hit = isHit(roll, needed)
+  const isHitAcMode = modeToggle.checked
+  if (isHitAcMode) {
+    // In hit AC mode, roll and set the manual roll input
+    const roll = Math.floor(Math.random() * 20) + 1
+    manualRollInput.value = roll
+    updateResults()
+    // Show in the roll output
+    rollValue.textContent = roll.toString()
+    rollResult.textContent = 'Rolled'
+    rollResult.classList.remove('hit', 'miss')
+    rollOutput.classList.remove('empty')
+    OBR.notification.show(`Rolled ${roll} for AC calculation`)
+  } else {
+    // Normal mode
+    const thaco = Number(thacoInput.value)
+    const ac = Number(acInput.value)
+    const bonus = Number(bonusInput.value)
+    const threshold = calculateThreshold(thaco, ac, bonus)
+    const needed = clamp(threshold, 1, 20)
+    const roll = Math.floor(Math.random() * 20) + 1
+    const hit = isHit(roll, needed)
 
-  rollValue.textContent = roll.toString()
-  rollResult.textContent = hit ? 'Hit' : 'Miss'
-  rollResult.classList.toggle('hit', hit)
-  rollResult.classList.toggle('miss', !hit)
-  rollOutput.classList.remove('empty')
+    rollValue.textContent = roll.toString()
+    rollResult.textContent = hit ? 'Hit' : 'Miss'
+    rollResult.classList.toggle('hit', hit)
+    rollResult.classList.toggle('miss', !hit)
+    rollOutput.classList.remove('empty')
 
-  OBR.notification.show(`Rolled ${roll}: ${hit ? 'HIT' : 'MISS'}`)
+    OBR.notification.show(`Rolled ${roll}: ${hit ? 'HIT' : 'MISS'}`)
+  }
 }
 
 thacoInput.addEventListener('input', updateResults)
 acInput.addEventListener('input', updateResults)
 bonusInput.addEventListener('input', updateResults)
+manualRollInput.addEventListener('input', updateResults)
+modeToggle.addEventListener('change', toggleMode)
 rollBtn.addEventListener('click', rollD20)
 
 updateResults()

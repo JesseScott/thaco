@@ -95,6 +95,19 @@ p {
   margin-top: 12px;
 }
 
+.mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.mode-toggle input {
+  margin: 0;
+}
+
 .form-grid {
   display: grid;
   gap: 16px;
@@ -130,7 +143,6 @@ p {
 
 .actions {
   justify-content: flex-start;
-  padding-left: 14px;
 }
 
 .roll-output {
