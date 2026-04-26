@@ -83,6 +83,35 @@ const manualRollInput = document.getElementById('manual-roll-input')
 const acField = document.getElementById('ac-field')
 const manualRollField = document.getElementById('manual-roll-field')
 
+const STORAGE_KEY = 'thaco-calculator-state'
+
+function saveState() {
+  const state = {
+    thaco: thacoInput.value,
+    ac: acInput.value,
+    bonus: bonusInput.value,
+    manualRoll: manualRollInput.value,
+    isHitAcMode: modeToggle.checked,
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+}
+
+function loadState() {
+  const saved = localStorage.getItem(STORAGE_KEY)
+  if (saved) {
+    try {
+      const state = JSON.parse(saved)
+      thacoInput.value = state.thaco
+      acInput.value = state.ac
+      bonusInput.value = state.bonus
+      manualRollInput.value = state.manualRoll
+      modeToggle.checked = state.isHitAcMode
+    } catch (e) {
+      console.error('Error loading state from localStorage', e)
+    }
+  }
+}
+
 function updateResults() {
   const thaco = Number(thacoInput.value)
   const bonus = Number(bonusInput.value)
@@ -97,6 +126,7 @@ function updateResults() {
     const needed = clamp(calculateThreshold(thaco, ac, bonus), 1, 20)
     resultValue.textContent = `${needed}`
   }
+  saveState()
 }
 
 function toggleMode() {
@@ -113,6 +143,7 @@ function toggleMode() {
     rollBtn.textContent = 'Roll d20'
   }
   updateResults()
+  saveState()
 }
 
 function rollD20() {
@@ -159,6 +190,7 @@ function resetInputs() {
   rollValue.textContent = '-'
   rollResult.textContent = '-'
   rollResult.classList.remove('hit', 'miss')
+  saveState()
 }
 
 thacoInput.addEventListener('input', updateResults)
@@ -169,4 +201,5 @@ modeToggle.addEventListener('change', toggleMode)
 rollBtn.addEventListener('click', rollD20)
 resetBtn.addEventListener('click', resetInputs)
 
-updateResults()
+loadState()
+toggleMode()
