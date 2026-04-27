@@ -95,6 +95,58 @@ p {
   margin-top: 12px;
 }
 
+.entry-management {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 720px) {
+  .entry-management {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.entry-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.entry-controls select {
+  flex: 1;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 15px;
+  color: var(--text-h);
+  background: #12131a;
+  cursor: pointer;
+}
+
+.entry-controls button {
+  width: 40px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-h);
+  font-size: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.entry-controls button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.entry-controls .delete-btn {
+  color: #b43434;
+}
+
 .mode-toggle {
   display: flex;
   align-items: center;

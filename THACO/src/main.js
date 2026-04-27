@@ -14,6 +14,23 @@ app.innerHTML = `
     <div class="section-divider"></div>
 
     <form id="calculator" class="calculator" autocomplete="off">
+      <div class="entry-management">
+        <div class="field">
+          <span>Entry</span>
+          <div class="entry-controls">
+            <select id="entry-select"></select>
+            <button id="add-entry-btn" type="button" title="Add Entry">+</button>
+            <button id="delete-entry-btn" type="button" title="Delete Entry" class="delete-btn">×</button>
+          </div>
+        </div>
+        <label class="field">
+          <span>Name</span>
+          <input id="entry-name-input" type="text" placeholder="e.g. Longsword" />
+        </label>
+      </div>
+
+      <div class="section-divider"></div>
+
       <label class="mode-toggle">
         <input id="mode-toggle" type="checkbox" />
         <span>Calculate hit AC instead</span>
@@ -82,17 +99,41 @@ const modeToggle = document.getElementById('mode-toggle')
 const manualRollInput = document.getElementById('manual-roll-input')
 const acField = document.getElementById('ac-field')
 const manualRollField = document.getElementById('manual-roll-field')
+const entrySelect = document.getElementById('entry-select')
+const entryNameInput = document.getElementById('entry-name-input')
+const addEntryBtn = document.getElementById('add-entry-btn')
+const deleteEntryBtn = document.getElementById('delete-entry-btn')
 
-const STORAGE_KEY = 'thaco-calculator-state'
+const STORAGE_KEY = 'thaco-calculator-state-v2'
+const OLD_STORAGE_KEY = 'thaco-calculator-state'
+
+let state = {
+  entries: [
+    {
+      id: crypto.randomUUID(),
+      name: 'Default',
+      thaco: '20',
+      ac: '10',
+      bonus: '0',
+    }
+  ],
+  currentEntryIndex: 0,
+  manualRoll: '10',
+  isHitAcMode: false,
+}
 
 function saveState() {
-  const state = {
-    thaco: thacoInput.value,
-    ac: acInput.value,
-    bonus: bonusInput.value,
-    manualRoll: manualRollInput.value,
-    isHitAcMode: modeToggle.checked,
+  // Update current entry with input values before saving
+  const currentEntry = state.entries[state.currentEntryIndex]
+  if (currentEntry) {
+    currentEntry.thaco = thacoInput.value
+    currentEntry.ac = acInput.value
+    currentEntry.bonus = bonusInput.value
+    currentEntry.name = entryNameInput.value || 'Unnamed'
   }
+  state.manualRoll = manualRollInput.value
+  state.isHitAcMode = modeToggle.checked
+
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
 }
 
@@ -100,15 +141,52 @@ function loadState() {
   const saved = localStorage.getItem(STORAGE_KEY)
   if (saved) {
     try {
-      const state = JSON.parse(saved)
-      thacoInput.value = state.thaco
-      acInput.value = state.ac
-      bonusInput.value = state.bonus
-      manualRollInput.value = state.manualRoll
-      modeToggle.checked = state.isHitAcMode
+      state = JSON.parse(saved)
     } catch (e) {
       console.error('Error loading state from localStorage', e)
     }
+  } else {
+    // Try to migrate from v1
+    const oldSaved = localStorage.getItem(OLD_STORAGE_KEY)
+    if (oldSaved) {
+      try {
+        const oldState = JSON.parse(oldSaved)
+        state.entries[0].thaco = oldState.thaco
+        state.entries[0].ac = oldState.ac
+        state.entries[0].bonus = oldState.bonus
+        state.manualRoll = oldState.manualRoll
+        state.isHitAcMode = oldState.isHitAcMode
+      } catch (e) {
+        console.error('Error migrating old state', e)
+      }
+    }
+  }
+  renderEntrySelect()
+  applyCurrentEntry()
+}
+
+function renderEntrySelect() {
+  entrySelect.innerHTML = ''
+  state.entries.forEach((entry, index) => {
+    const option = document.createElement('option')
+    option.value = index
+    option.textContent = entry.name
+    if (index === state.currentEntryIndex) {
+      option.selected = true
+    }
+    entrySelect.appendChild(option)
+  })
+}
+
+function applyCurrentEntry() {
+  const entry = state.entries[state.currentEntryIndex]
+  if (entry) {
+    thacoInput.value = entry.thaco
+    acInput.value = entry.ac
+    bonusInput.value = entry.bonus
+    entryNameInput.value = entry.name
+    manualRollInput.value = state.manualRoll
+    modeToggle.checked = state.isHitAcMode
   }
 }
 
@@ -193,6 +271,54 @@ function resetInputs() {
   saveState()
 }
 
+function addEntry() {
+  saveState() // Save current entry before adding new one
+  const newEntry = {
+    id: crypto.randomUUID(),
+    name: `Entry ${state.entries.length + 1}`,
+    thaco: '20',
+    ac: '10',
+    bonus: '0',
+  }
+  state.entries.push(newEntry)
+  state.currentEntryIndex = state.entries.length - 1
+  renderEntrySelect()
+  applyCurrentEntry()
+  updateResults()
+}
+
+function deleteEntry() {
+  if (state.entries.length <= 1) {
+    OBR.notification.show('Cannot delete the last entry')
+    return
+  }
+  state.entries.splice(state.currentEntryIndex, 1)
+  state.currentEntryIndex = Math.max(0, state.currentEntryIndex - 1)
+  renderEntrySelect()
+  applyCurrentEntry()
+  updateResults()
+}
+
+function switchEntry() {
+  saveState()
+  state.currentEntryIndex = parseInt(entrySelect.value)
+  applyCurrentEntry()
+  updateResults()
+}
+
+function updateEntryName() {
+  const currentEntry = state.entries[state.currentEntryIndex]
+  if (currentEntry) {
+    currentEntry.name = entryNameInput.value
+    // Update name in select dropdown
+    const option = entrySelect.options[state.currentEntryIndex]
+    if (option) {
+      option.textContent = currentEntry.name || 'Unnamed'
+    }
+  }
+  saveState()
+}
+
 thacoInput.addEventListener('input', updateResults)
 acInput.addEventListener('input', updateResults)
 bonusInput.addEventListener('input', updateResults)
@@ -200,6 +326,11 @@ manualRollInput.addEventListener('input', updateResults)
 modeToggle.addEventListener('change', toggleMode)
 rollBtn.addEventListener('click', rollD20)
 resetBtn.addEventListener('click', resetInputs)
+
+entrySelect.addEventListener('change', switchEntry)
+addEntryBtn.addEventListener('click', addEntry)
+deleteEntryBtn.addEventListener('click', deleteEntry)
+entryNameInput.addEventListener('input', updateEntryName)
 
 loadState()
 toggleMode()
