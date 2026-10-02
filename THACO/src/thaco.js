@@ -55,3 +55,14 @@ export function isHit(roll, needed) {
 export function impliedThaco(roll, ac, bonus) {
   return roll + ac + bonus
 }
+
+/**
+ * Calculates the Armor Class a given roll would hit.
+ * @param {number} thaco - The THAC0 value.
+ * @param {number} bonus - The attack bonus.
+ * @param {number} roll - The d20 roll.
+ * @returns {number} The AC hit by the roll.
+ */
+export function getHitAc(thaco, bonus, roll) {
+  return thaco - bonus - roll
+}

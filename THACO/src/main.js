@@ -1,6 +1,6 @@
 import './style.css'
 import OBR from '@owlbear-rodeo/sdk'
-import { clamp, calculateThreshold, isHit, impliedThaco } from './thaco.js'
+import { getNeededRoll, getHitAc, isHit } from './thaco.js'
 
 const app = document.querySelector('#app')
 
@@ -104,6 +104,19 @@ const entryNameInput = document.getElementById('entry-name-input')
 const addEntryBtn = document.getElementById('add-entry-btn')
 const deleteEntryBtn = document.getElementById('delete-entry-btn')
 
+// OBR calls only work inside Owlbear Rodeo; skip them when opened standalone
+let obrReady = false
+if (OBR.isAvailable) {
+  OBR.onReady(() => {
+    obrReady = true
+  })
+}
+
+function notify(message) {
+  if (!obrReady) return
+  OBR.notification.show(message).catch(() => {})
+}
+
 const STORAGE_KEY = 'thaco-calculator-state-v2'
 const OLD_STORAGE_KEY = 'thaco-calculator-state'
 
@@ -122,6 +135,8 @@ let state = {
   isHitAcMode: false,
 }
 
+const isNumeric = (value) => value !== '' && Number.isFinite(Number(value))
+
 function saveState() {
   // Update current entry with input values before saving
   const currentEntry = state.entries[state.currentEntryIndex]
@@ -134,32 +149,54 @@ function saveState() {
   state.manualRoll = manualRollInput.value
   state.isHitAcMode = modeToggle.checked
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  } catch {
+    // storage unavailable (private mode, quota); ignore
+  }
+}
+
+function isValidEntry(entry) {
+  return (
+    entry &&
+    typeof entry.name === 'string' &&
+    isNumeric(entry.thaco) &&
+    isNumeric(entry.ac) &&
+    isNumeric(entry.bonus)
+  )
 }
 
 function loadState() {
-  const saved = localStorage.getItem(STORAGE_KEY)
-  if (saved) {
-    try {
-      state = JSON.parse(saved)
-    } catch (e) {
-      console.error('Error loading state from localStorage', e)
-    }
-  } else {
-    // Try to migrate from v1
-    const oldSaved = localStorage.getItem(OLD_STORAGE_KEY)
-    if (oldSaved) {
-      try {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      const parsed = JSON.parse(saved)
+      if (Array.isArray(parsed.entries) && parsed.entries.length > 0 && parsed.entries.every(isValidEntry)) {
+        state.entries = parsed.entries.map((entry) => ({ ...entry, id: entry.id || crypto.randomUUID() }))
+        state.currentEntryIndex =
+          Number.isInteger(parsed.currentEntryIndex) &&
+          parsed.currentEntryIndex >= 0 &&
+          parsed.currentEntryIndex < state.entries.length
+            ? parsed.currentEntryIndex
+            : 0
+        if (isNumeric(parsed.manualRoll)) state.manualRoll = parsed.manualRoll
+        state.isHitAcMode = parsed.isHitAcMode === true
+      }
+    } else {
+      // Migrate from the single-entry v1 format
+      const oldSaved = localStorage.getItem(OLD_STORAGE_KEY)
+      if (oldSaved) {
         const oldState = JSON.parse(oldSaved)
-        state.entries[0].thaco = oldState.thaco
-        state.entries[0].ac = oldState.ac
-        state.entries[0].bonus = oldState.bonus
-        state.manualRoll = oldState.manualRoll
-        state.isHitAcMode = oldState.isHitAcMode
-      } catch (e) {
-        console.error('Error migrating old state', e)
+        const entry = state.entries[0]
+        if (isNumeric(oldState.thaco)) entry.thaco = oldState.thaco
+        if (isNumeric(oldState.ac)) entry.ac = oldState.ac
+        if (isNumeric(oldState.bonus)) entry.bonus = oldState.bonus
+        if (isNumeric(oldState.manualRoll)) state.manualRoll = oldState.manualRoll
+        state.isHitAcMode = oldState.isHitAcMode === true
       }
     }
+  } catch (e) {
+    console.error('Error loading state from localStorage', e)
   }
   renderEntrySelect()
   applyCurrentEntry()
@@ -197,11 +234,10 @@ function updateResults() {
 
   if (isHitAcMode) {
     const roll = Number(manualRollInput.value)
-    const ac = thaco - bonus - roll
-    resultValue.textContent = `${ac}`
+    resultValue.textContent = `${getHitAc(thaco, bonus, roll)}`
   } else {
     const ac = Number(acInput.value)
-    const needed = clamp(calculateThreshold(thaco, ac, bonus), 1, 20)
+    const needed = getNeededRoll(thaco, ac, bonus)
     resultValue.textContent = `${needed}`
   }
   saveState()
@@ -236,14 +272,13 @@ function rollD20() {
     rollResult.textContent = 'Rolled'
     rollResult.classList.remove('hit', 'miss')
     rollOutput.classList.remove('empty')
-    OBR.notification.show(`Rolled ${roll} for AC calculation`)
+    notify(`Rolled ${roll} for AC calculation`)
   } else {
     // Normal mode
     const thaco = Number(thacoInput.value)
     const ac = Number(acInput.value)
     const bonus = Number(bonusInput.value)
-    const threshold = calculateThreshold(thaco, ac, bonus)
-    const needed = clamp(threshold, 1, 20)
+    const needed = getNeededRoll(thaco, ac, bonus)
     const roll = Math.floor(Math.random() * 20) + 1
     const hit = isHit(roll, needed)
 
@@ -253,7 +288,7 @@ function rollD20() {
     rollResult.classList.toggle('miss', !hit)
     rollOutput.classList.remove('empty')
 
-    OBR.notification.show(`Rolled ${roll}: ${hit ? 'HIT' : 'MISS'}`)
+    notify(`Rolled ${roll}: ${hit ? 'HIT' : 'MISS'}`)
   }
 }
 
@@ -289,7 +324,7 @@ function addEntry() {
 
 function deleteEntry() {
   if (state.entries.length <= 1) {
-    OBR.notification.show('Cannot delete the last entry')
+    notify('Cannot delete the last entry')
     return
   }
   state.entries.splice(state.currentEntryIndex, 1)
