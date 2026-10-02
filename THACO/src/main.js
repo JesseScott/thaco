@@ -83,6 +83,19 @@ const manualRollInput = document.getElementById('manual-roll-input')
 const acField = document.getElementById('ac-field')
 const manualRollField = document.getElementById('manual-roll-field')
 
+// OBR calls only work inside Owlbear Rodeo; skip them when opened standalone
+let obrReady = false
+if (OBR.isAvailable) {
+  OBR.onReady(() => {
+    obrReady = true
+  })
+}
+
+function notify(message) {
+  if (!obrReady) return
+  notify(message).catch(() => {})
+}
+
 const STORAGE_KEY = 'thaco-calculator-state'
 
 function saveState() {
@@ -93,22 +106,28 @@ function saveState() {
     manualRoll: manualRollInput.value,
     isHitAcMode: modeToggle.checked,
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  } catch {
+    // storage unavailable (private mode, quota); ignore
+  }
 }
 
 function loadState() {
-  const saved = localStorage.getItem(STORAGE_KEY)
-  if (saved) {
-    try {
-      const state = JSON.parse(saved)
-      thacoInput.value = state.thaco
-      acInput.value = state.ac
-      bonusInput.value = state.bonus
-      manualRollInput.value = state.manualRoll
-      modeToggle.checked = state.isHitAcMode
-    } catch (e) {
-      console.error('Error loading state from localStorage', e)
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (!saved) return
+    const state = JSON.parse(saved)
+    const apply = (input, value) => {
+      if (value !== '' && Number.isFinite(Number(value))) input.value = value
     }
+    apply(thacoInput, state.thaco)
+    apply(acInput, state.ac)
+    apply(bonusInput, state.bonus)
+    apply(manualRollInput, state.manualRoll)
+    modeToggle.checked = state.isHitAcMode === true
+  } catch (e) {
+    console.error('Error loading state from localStorage', e)
   }
 }
 
@@ -158,7 +177,7 @@ function rollD20() {
     rollResult.textContent = 'Rolled'
     rollResult.classList.remove('hit', 'miss')
     rollOutput.classList.remove('empty')
-    OBR.notification.show(`Rolled ${roll} for AC calculation`)
+    notify(`Rolled ${roll} for AC calculation`)
   } else {
     // Normal mode
     const thaco = Number(thacoInput.value)
@@ -175,7 +194,7 @@ function rollD20() {
     rollResult.classList.toggle('miss', !hit)
     rollOutput.classList.remove('empty')
 
-    OBR.notification.show(`Rolled ${roll}: ${hit ? 'HIT' : 'MISS'}`)
+    notify(`Rolled ${roll}: ${hit ? 'HIT' : 'MISS'}`)
   }
 }
 

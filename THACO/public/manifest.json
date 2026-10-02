@@ -4,9 +4,9 @@
   "manifest_version": 1,
   "action": {
     "title": "THACO",
-    "icon": "/icon.svg",
-    "popover": "/",
-    "height": 24,
-    "width": 24
+    "icon": "icon.svg",
+    "popover": "index.html",
+    "height": 520,
+    "width": 380
   }
 }
