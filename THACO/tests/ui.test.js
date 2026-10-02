@@ -49,8 +49,15 @@ test('THACO calculator persists state across reloads', async ({ page }) => {
 test('THACO calculator supports multiple entries', async ({ page }) => {
   await page.goto('/');
 
+  // Profile accordion is collapsed by default and shows the active entry
+  await expect(page.locator('#entry-accordion')).not.toHaveAttribute('open', '');
+  await expect(page.locator('#entry-summary-name')).toHaveText('Default');
+  await page.click('#entry-accordion summary');
+  await expect(page.locator('#entry-name-input')).toBeVisible();
+
   // Initial entry
   await page.fill('#entry-name-input', 'Longsword');
+  await expect(page.locator('#entry-summary-name')).toHaveText('Longsword');
   await page.fill('#thaco-input', '18');
   await page.fill('#ac-input', '5');
   await page.fill('#bonus-input', '2');
@@ -75,6 +82,8 @@ test('THACO calculator supports multiple entries', async ({ page }) => {
 
   // Reload and check persistence
   await page.reload();
+  await expect(page.locator('#entry-summary-name')).toHaveText('Longsword');
+  await page.click('#entry-accordion summary');
   await expect(page.locator('#entry-select')).toHaveValue('0');
   await expect(page.locator('#entry-name-input')).toHaveValue('Longsword');
 
