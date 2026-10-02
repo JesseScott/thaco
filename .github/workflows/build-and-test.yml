@@ -32,3 +32,13 @@ jobs:
       - name: Run tests
         run: npm test
         working-directory: THACO
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+        working-directory: THACO
+
+      - name: Run UI tests
+        run: npm run test:ui
+        working-directory: THACO
+        env:
+          CI: 'true'

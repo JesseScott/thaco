@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { clamp, calculateThreshold, getNeededRoll, isHit, impliedThaco } from './thaco.js'
+import { clamp, calculateThreshold, getNeededRoll, getHitAc, isHit, impliedThaco } from './thaco.js'
 
 test('calculateThreshold returns THAC0 - AC - bonus', () => {
   assert.equal(calculateThreshold(18, 14, 2), 2)
@@ -23,4 +23,9 @@ test('isHit handles natural 20 auto-hit and natural 1 auto-miss', () => {
 
 test('impliedThaco calculates the roll + AC + bonus', () => {
   assert.equal(impliedThaco(15, 12, 3), 30)
+})
+
+test('getHitAc calculates the AC a roll hits', () => {
+  assert.equal(getHitAc(20, 0, 10), 10)
+  assert.equal(getHitAc(18, 2, 15), 1)
 })

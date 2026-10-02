@@ -1,6 +1,6 @@
 import './style.css'
 import OBR from '@owlbear-rodeo/sdk'
-import { clamp, calculateThreshold, isHit } from './thaco.js'
+import { getNeededRoll, getHitAc, isHit } from './thaco.js'
 
 const app = document.querySelector('#app')
 
@@ -83,6 +83,19 @@ const manualRollInput = document.getElementById('manual-roll-input')
 const acField = document.getElementById('ac-field')
 const manualRollField = document.getElementById('manual-roll-field')
 
+// OBR calls only work inside Owlbear Rodeo; skip them when opened standalone
+let obrReady = false
+if (OBR.isAvailable) {
+  OBR.onReady(() => {
+    obrReady = true
+  })
+}
+
+function notify(message) {
+  if (!obrReady) return
+  OBR.notification.show(message).catch(() => {})
+}
+
 const STORAGE_KEY = 'thaco-calculator-state'
 
 function saveState() {
@@ -93,22 +106,28 @@ function saveState() {
     manualRoll: manualRollInput.value,
     isHitAcMode: modeToggle.checked,
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  } catch {
+    // storage unavailable (private mode, quota); ignore
+  }
 }
 
 function loadState() {
-  const saved = localStorage.getItem(STORAGE_KEY)
-  if (saved) {
-    try {
-      const state = JSON.parse(saved)
-      thacoInput.value = state.thaco
-      acInput.value = state.ac
-      bonusInput.value = state.bonus
-      manualRollInput.value = state.manualRoll
-      modeToggle.checked = state.isHitAcMode
-    } catch (e) {
-      console.error('Error loading state from localStorage', e)
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (!saved) return
+    const state = JSON.parse(saved)
+    const apply = (input, value) => {
+      if (value !== '' && Number.isFinite(Number(value))) input.value = value
     }
+    apply(thacoInput, state.thaco)
+    apply(acInput, state.ac)
+    apply(bonusInput, state.bonus)
+    apply(manualRollInput, state.manualRoll)
+    modeToggle.checked = state.isHitAcMode === true
+  } catch (e) {
+    console.error('Error loading state from localStorage', e)
   }
 }
 
@@ -119,11 +138,10 @@ function updateResults() {
 
   if (isHitAcMode) {
     const roll = Number(manualRollInput.value)
-    const ac = thaco - bonus - roll
-    resultValue.textContent = `${ac}`
+    resultValue.textContent = `${getHitAc(thaco, bonus, roll)}`
   } else {
     const ac = Number(acInput.value)
-    const needed = clamp(calculateThreshold(thaco, ac, bonus), 1, 20)
+    const needed = getNeededRoll(thaco, ac, bonus)
     resultValue.textContent = `${needed}`
   }
   saveState()
@@ -147,20 +165,22 @@ function toggleMode() {
 function rollD20() {
   const isHitAcMode = modeToggle.checked
   if (isHitAcMode) {
+    // In hit AC mode, roll and set the manual roll input
     const roll = Math.floor(Math.random() * 20) + 1
     manualRollInput.value = roll
     updateResults()
+    // Show in the roll output
     rollValue.textContent = roll.toString()
     rollResult.textContent = 'Rolled'
     rollResult.classList.remove('hit', 'miss')
     rollOutput.classList.remove('empty')
-    OBR.notification.show(`Rolled ${roll} for AC calculation`)
+    notify(`Rolled ${roll} for AC calculation`)
   } else {
+    // Normal mode
     const thaco = Number(thacoInput.value)
     const ac = Number(acInput.value)
     const bonus = Number(bonusInput.value)
-    const threshold = calculateThreshold(thaco, ac, bonus)
-    const needed = clamp(threshold, 1, 20)
+    const needed = getNeededRoll(thaco, ac, bonus)
     const roll = Math.floor(Math.random() * 20) + 1
     const hit = isHit(roll, needed)
 
@@ -170,7 +190,7 @@ function rollD20() {
     rollResult.classList.toggle('miss', !hit)
     rollOutput.classList.remove('empty')
 
-    OBR.notification.show(`Rolled ${roll}: ${hit ? 'HIT' : 'MISS'}`)
+    notify(`Rolled ${roll}: ${hit ? 'HIT' : 'MISS'}`)
   }
 }
 
