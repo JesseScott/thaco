@@ -14,6 +14,23 @@ app.innerHTML = `
     <div class="section-divider"></div>
 
     <form id="calculator" class="calculator" autocomplete="off">
+      <div class="entry-management">
+        <div class="field">
+          <span>Entry</span>
+          <div class="entry-controls">
+            <select id="entry-select"></select>
+            <button id="add-entry-btn" type="button" title="Add Entry">+</button>
+            <button id="delete-entry-btn" type="button" title="Delete Entry" class="delete-btn">×</button>
+          </div>
+        </div>
+        <label class="field">
+          <span>Name</span>
+          <input id="entry-name-input" type="text" placeholder="e.g. Longsword" />
+        </label>
+      </div>
+
+      <div class="section-divider"></div>
+
       <label class="mode-toggle">
         <input id="mode-toggle" type="checkbox" />
         <span>Calculate hit AC instead</span>
@@ -82,6 +99,10 @@ const modeToggle = document.getElementById('mode-toggle')
 const manualRollInput = document.getElementById('manual-roll-input')
 const acField = document.getElementById('ac-field')
 const manualRollField = document.getElementById('manual-roll-field')
+const entrySelect = document.getElementById('entry-select')
+const entryNameInput = document.getElementById('entry-name-input')
+const addEntryBtn = document.getElementById('add-entry-btn')
+const deleteEntryBtn = document.getElementById('delete-entry-btn')
 
 // OBR calls only work inside Owlbear Rodeo; skip them when opened standalone
 let obrReady = false
@@ -93,19 +114,41 @@ if (OBR.isAvailable) {
 
 function notify(message) {
   if (!obrReady) return
-  notify(message).catch(() => {})
+  OBR.notification.show(message).catch(() => {})
 }
 
-const STORAGE_KEY = 'thaco-calculator-state'
+const STORAGE_KEY = 'thaco-calculator-state-v2'
+const OLD_STORAGE_KEY = 'thaco-calculator-state'
+
+let state = {
+  entries: [
+    {
+      id: crypto.randomUUID(),
+      name: 'Default',
+      thaco: '20',
+      ac: '10',
+      bonus: '0',
+    }
+  ],
+  currentEntryIndex: 0,
+  manualRoll: '10',
+  isHitAcMode: false,
+}
+
+const isNumeric = (value) => value !== '' && Number.isFinite(Number(value))
 
 function saveState() {
-  const state = {
-    thaco: thacoInput.value,
-    ac: acInput.value,
-    bonus: bonusInput.value,
-    manualRoll: manualRollInput.value,
-    isHitAcMode: modeToggle.checked,
+  // Update current entry with input values before saving
+  const currentEntry = state.entries[state.currentEntryIndex]
+  if (currentEntry) {
+    currentEntry.thaco = thacoInput.value
+    currentEntry.ac = acInput.value
+    currentEntry.bonus = bonusInput.value
+    currentEntry.name = entryNameInput.value || 'Unnamed'
   }
+  state.manualRoll = manualRollInput.value
+  state.isHitAcMode = modeToggle.checked
+
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   } catch {
@@ -113,21 +156,74 @@ function saveState() {
   }
 }
 
+function isValidEntry(entry) {
+  return (
+    entry &&
+    typeof entry.name === 'string' &&
+    isNumeric(entry.thaco) &&
+    isNumeric(entry.ac) &&
+    isNumeric(entry.bonus)
+  )
+}
+
 function loadState() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
-    if (!saved) return
-    const state = JSON.parse(saved)
-    const apply = (input, value) => {
-      if (value !== '' && Number.isFinite(Number(value))) input.value = value
+    if (saved) {
+      const parsed = JSON.parse(saved)
+      if (Array.isArray(parsed.entries) && parsed.entries.length > 0 && parsed.entries.every(isValidEntry)) {
+        state.entries = parsed.entries.map((entry) => ({ ...entry, id: entry.id || crypto.randomUUID() }))
+        state.currentEntryIndex =
+          Number.isInteger(parsed.currentEntryIndex) &&
+          parsed.currentEntryIndex >= 0 &&
+          parsed.currentEntryIndex < state.entries.length
+            ? parsed.currentEntryIndex
+            : 0
+        if (isNumeric(parsed.manualRoll)) state.manualRoll = parsed.manualRoll
+        state.isHitAcMode = parsed.isHitAcMode === true
+      }
+    } else {
+      // Migrate from the single-entry v1 format
+      const oldSaved = localStorage.getItem(OLD_STORAGE_KEY)
+      if (oldSaved) {
+        const oldState = JSON.parse(oldSaved)
+        const entry = state.entries[0]
+        if (isNumeric(oldState.thaco)) entry.thaco = oldState.thaco
+        if (isNumeric(oldState.ac)) entry.ac = oldState.ac
+        if (isNumeric(oldState.bonus)) entry.bonus = oldState.bonus
+        if (isNumeric(oldState.manualRoll)) state.manualRoll = oldState.manualRoll
+        state.isHitAcMode = oldState.isHitAcMode === true
+      }
     }
-    apply(thacoInput, state.thaco)
-    apply(acInput, state.ac)
-    apply(bonusInput, state.bonus)
-    apply(manualRollInput, state.manualRoll)
-    modeToggle.checked = state.isHitAcMode === true
   } catch (e) {
     console.error('Error loading state from localStorage', e)
+  }
+  renderEntrySelect()
+  applyCurrentEntry()
+}
+
+function renderEntrySelect() {
+  entrySelect.innerHTML = ''
+  state.entries.forEach((entry, index) => {
+    const option = document.createElement('option')
+    option.value = index
+    option.textContent = entry.name
+    if (index === state.currentEntryIndex) {
+      option.selected = true
+    }
+    entrySelect.appendChild(option)
+  })
+}
+
+function applyCurrentEntry() {
+  const entry = state.entries[state.currentEntryIndex]
+  if (entry) {
+    thacoInput.value = entry.thaco
+    acInput.value = entry.ac
+    bonusInput.value = entry.bonus
+    entryNameInput.value = entry.name
+    manualRollInput.value = state.manualRoll
+    modeToggle.checked = state.isHitAcMode
   }
 }
 
@@ -210,6 +306,54 @@ function resetInputs() {
   saveState()
 }
 
+function addEntry() {
+  saveState() // Save current entry before adding new one
+  const newEntry = {
+    id: crypto.randomUUID(),
+    name: `Entry ${state.entries.length + 1}`,
+    thaco: '20',
+    ac: '10',
+    bonus: '0',
+  }
+  state.entries.push(newEntry)
+  state.currentEntryIndex = state.entries.length - 1
+  renderEntrySelect()
+  applyCurrentEntry()
+  updateResults()
+}
+
+function deleteEntry() {
+  if (state.entries.length <= 1) {
+    notify('Cannot delete the last entry')
+    return
+  }
+  state.entries.splice(state.currentEntryIndex, 1)
+  state.currentEntryIndex = Math.max(0, state.currentEntryIndex - 1)
+  renderEntrySelect()
+  applyCurrentEntry()
+  updateResults()
+}
+
+function switchEntry() {
+  saveState()
+  state.currentEntryIndex = parseInt(entrySelect.value)
+  applyCurrentEntry()
+  updateResults()
+}
+
+function updateEntryName() {
+  const currentEntry = state.entries[state.currentEntryIndex]
+  if (currentEntry) {
+    currentEntry.name = entryNameInput.value
+    // Update name in select dropdown
+    const option = entrySelect.options[state.currentEntryIndex]
+    if (option) {
+      option.textContent = currentEntry.name || 'Unnamed'
+    }
+  }
+  saveState()
+}
+
 thacoInput.addEventListener('input', updateResults)
 acInput.addEventListener('input', updateResults)
 bonusInput.addEventListener('input', updateResults)
@@ -217,6 +361,11 @@ manualRollInput.addEventListener('input', updateResults)
 modeToggle.addEventListener('change', toggleMode)
 rollBtn.addEventListener('click', rollD20)
 resetBtn.addEventListener('click', resetInputs)
+
+entrySelect.addEventListener('change', switchEntry)
+addEntryBtn.addEventListener('click', addEntry)
+deleteEntryBtn.addEventListener('click', deleteEntry)
+entryNameInput.addEventListener('input', updateEntryName)
 
 loadState()
 toggleMode()
