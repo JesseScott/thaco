@@ -36,9 +36,12 @@ jobs:
         working-directory: THACO
         env:
           CI: 'true'
+      - id: pages
+        uses: actions/configure-pages@v5
       - run: npm run build
         working-directory: THACO
-      - uses: actions/configure-pages@v5
+        env:
+          SITE_URL: ${{ steps.pages.outputs.base_url }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: THACO/dist
