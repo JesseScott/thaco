@@ -27,6 +27,17 @@ function absoluteManifestUrls() {
 export default defineConfig({
   // Relative base so the build works from a subpath (e.g. GitHub Pages)
   base: "./",
+  build: {
+    rollupOptions: {
+      // Stable file names: Pages caches index.html for ~10 minutes, and a stale
+      // copy that points at a deleted hashed file renders a blank popover.
+      output: {
+        entryFileNames: "assets/app.js",
+        chunkFileNames: "assets/[name].js",
+        assetFileNames: "assets/[name][extname]",
+      },
+    },
+  },
   plugins: [absoluteManifestUrls()],
   server: {
     cors: {
