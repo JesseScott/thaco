@@ -69,9 +69,69 @@ h1 {
   gap: 10px;
 }
 
+.entry-accordion {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.entry-accordion summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.entry-accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.entry-accordion summary::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  margin-left: auto;
+  border-right: 2px solid var(--text-muted);
+  border-bottom: 2px solid var(--text-muted);
+  transform: rotate(45deg);
+  transition: transform 0.2s;
+}
+
+.entry-accordion[open] summary::after {
+  transform: rotate(-135deg);
+}
+
+.entry-accordion summary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  border-radius: 10px;
+}
+
+.entry-summary-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.entry-summary-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-family: var(--mono);
+  color: var(--text-h);
+}
+
 .entry-management {
   display: grid;
   gap: 8px;
+  padding: 0 10px 10px;
 }
 
 .entry-controls {

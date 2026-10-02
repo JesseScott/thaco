@@ -9,14 +9,20 @@ app.innerHTML = `
     <h1>THACO Calculator</h1>
 
     <form id="calculator" class="calculator" autocomplete="off">
-      <div class="entry-management">
+      <details id="entry-accordion" class="entry-accordion">
+        <summary>
+          <span class="entry-summary-label">Profile</span>
+          <span id="entry-summary-name" class="entry-summary-name">Default</span>
+        </summary>
+        <div class="entry-management">
         <div class="entry-controls">
           <select id="entry-select" aria-label="Entry"></select>
           <button id="add-entry-btn" type="button" title="Add Entry" aria-label="Add Entry">+</button>
           <button id="delete-entry-btn" type="button" title="Delete Entry" aria-label="Delete Entry" class="delete-btn">×</button>
         </div>
         <input id="entry-name-input" type="text" placeholder="Entry name, e.g. Longsword" aria-label="Entry name" />
-      </div>
+        </div>
+      </details>
 
       <div class="input-group">
         <label class="field">
@@ -83,6 +89,7 @@ const acField = document.getElementById('ac-field')
 const manualRollField = document.getElementById('manual-roll-field')
 const entrySelect = document.getElementById('entry-select')
 const entryNameInput = document.getElementById('entry-name-input')
+const entrySummaryName = document.getElementById('entry-summary-name')
 const addEntryBtn = document.getElementById('add-entry-btn')
 const deleteEntryBtn = document.getElementById('delete-entry-btn')
 
@@ -197,8 +204,14 @@ function renderEntrySelect() {
   })
 }
 
+function updateEntrySummary() {
+  const entry = state.entries[state.currentEntryIndex]
+  entrySummaryName.textContent = (entry && entry.name) || 'Unnamed'
+}
+
 function applyCurrentEntry() {
   const entry = state.entries[state.currentEntryIndex]
+  updateEntrySummary()
   if (entry) {
     thacoInput.value = entry.thaco
     acInput.value = entry.ac
@@ -330,6 +343,7 @@ function updateEntryName() {
     if (option) {
       option.textContent = currentEntry.name || 'Unnamed'
     }
+    updateEntrySummary()
   }
   saveState()
 }
