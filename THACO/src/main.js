@@ -93,7 +93,7 @@ if (OBR.isAvailable) {
 
 function notify(message) {
   if (!obrReady) return
-  notify(message).catch(() => {})
+  OBR.notification.show(message).catch(() => {})
 }
 
 const STORAGE_KEY = 'thaco-calculator-state'
