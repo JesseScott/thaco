@@ -6,72 +6,54 @@ const app = document.querySelector('#app')
 
 app.innerHTML = `
   <main class="panel">
-    <header class="hero-panel">
-      <h1>THACO Calculator</h1>
-      <p>Simplified AD&D 2E combat calculations</p>
-    </header>
-
-    <div class="section-divider"></div>
+    <h1>THACO Calculator</h1>
 
     <form id="calculator" class="calculator" autocomplete="off">
       <div class="entry-management">
-        <div class="field">
-          <span>Entry</span>
-          <div class="entry-controls">
-            <select id="entry-select"></select>
-            <button id="add-entry-btn" type="button" title="Add Entry">+</button>
-            <button id="delete-entry-btn" type="button" title="Delete Entry" class="delete-btn">×</button>
-          </div>
+        <div class="entry-controls">
+          <select id="entry-select" aria-label="Entry"></select>
+          <button id="add-entry-btn" type="button" title="Add Entry" aria-label="Add Entry">+</button>
+          <button id="delete-entry-btn" type="button" title="Delete Entry" aria-label="Delete Entry" class="delete-btn">×</button>
         </div>
+        <input id="entry-name-input" type="text" placeholder="Entry name, e.g. Longsword" aria-label="Entry name" />
+      </div>
+
+      <div class="input-group">
         <label class="field">
-          <span>Name</span>
-          <input id="entry-name-input" type="text" placeholder="e.g. Longsword" />
+          <span>THAC0</span>
+          <input id="thaco-input" type="number" value="20" min="-20" step="1" />
+        </label>
+
+        <label class="field" id="ac-field">
+          <span>Armor Class</span>
+          <input id="ac-input" type="number" value="10" min="-20" step="1" />
+        </label>
+
+        <label class="field" id="manual-roll-field" style="display: none;">
+          <span>d20 Roll</span>
+          <input id="manual-roll-input" type="number" value="10" min="1" max="20" step="1" />
+        </label>
+
+        <label class="field">
+          <span>Attack Bonus</span>
+          <input id="bonus-input" type="number" value="0" min="-20" step="1" />
         </label>
       </div>
 
-      <div class="section-divider"></div>
-
-      <div class="form-grid">
-        <div class="input-group">
-          <label class="field">
-            <span>THAC0</span>
-            <input id="thaco-input" type="number" value="20" min="-20" step="1" />
-          </label>
-
-          <label class="field" id="ac-field">
-            <span>Armor Class</span>
-            <input id="ac-input" type="number" value="10" min="-20" step="1" />
-          </label>
-
-          <label class="field" id="manual-roll-field" style="display: none;">
-            <span>d20 Roll</span>
-            <input id="manual-roll-input" type="number" value="10" min="1" max="20" step="1" />
-          </label>
-
-          <label class="field">
-            <span>Attack Bonus</span>
-            <input id="bonus-input" type="number" value="0" min="-20" step="1" />
-          </label>
+      <div class="results">
+        <label class="mode-toggle">
+          <input id="mode-toggle" type="checkbox" />
+          <span>Calculate Hit AC</span>
+        </label>
+        <div class="result-row">
+          <span id="result-label">Target</span>
+          <strong id="result-value">-</strong>
         </div>
+      </div>
 
-        <div class="action-group">
-          <label class="mode-toggle">
-            <input id="mode-toggle" type="checkbox" />
-            <span>Calculate Hit AC</span>
-          </label>
-
-          <div class="results">
-            <div class="result-row">
-              <span id="result-label">Target</span>
-              <strong id="result-value">-</strong>
-            </div>
-          </div>
-
-          <div class="actions">
-            <button id="roll-btn" type="button">Roll d20</button>
-            <button id="reset-btn" type="button">Reset</button>
-          </div>
-        </div>
+      <div class="actions">
+        <button id="roll-btn" type="button">Roll d20</button>
+        <button id="reset-btn" type="button">Reset</button>
       </div>
 
       <section id="roll-output" class="roll-output empty">
