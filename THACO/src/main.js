@@ -8,7 +8,7 @@ app.innerHTML = `
   <main class="panel">
     <header class="hero-panel">
       <h1>THACO Calculator</h1>
-      <p>Enter your THAC0, target AC, and attack bonus to calculate.</p>
+      <p>Simplified AD&D 2E combat calculations</p>
     </header>
 
     <div class="section-divider"></div>
@@ -31,11 +31,6 @@ app.innerHTML = `
 
       <div class="section-divider"></div>
 
-      <label class="mode-toggle">
-        <input id="mode-toggle" type="checkbox" />
-        <span>Calculate hit AC instead</span>
-      </label>
-
       <div class="form-grid">
         <div class="input-group">
           <label class="field">
@@ -49,7 +44,7 @@ app.innerHTML = `
           </label>
 
           <label class="field" id="manual-roll-field" style="display: none;">
-            <span>Roll</span>
+            <span>d20 Roll</span>
             <input id="manual-roll-input" type="number" value="10" min="1" max="20" step="1" />
           </label>
 
@@ -60,6 +55,11 @@ app.innerHTML = `
         </div>
 
         <div class="action-group">
+          <label class="mode-toggle">
+            <input id="mode-toggle" type="checkbox" />
+            <span>Calculate Hit AC</span>
+          </label>
+
           <div class="results">
             <div class="result-row">
               <span id="result-label">Target</span>
@@ -76,7 +76,7 @@ app.innerHTML = `
 
       <section id="roll-output" class="roll-output empty">
         <div class="roll-card">
-          <div class="roll-label">d20 roll</div>
+          <div class="roll-label">Recent Roll</div>
           <div id="roll-value" class="roll-value">-</div>
           <div id="roll-result" class="roll-result">-</div>
         </div>
@@ -247,14 +247,12 @@ function toggleMode() {
   const isHitAcMode = modeToggle.checked
   if (isHitAcMode) {
     acField.style.display = 'none'
-    manualRollField.style.display = 'block'
+    manualRollField.style.display = 'flex'
     resultLabel.textContent = 'Hits AC'
-    rollBtn.textContent = 'Roll d20'
   } else {
-    acField.style.display = 'block'
+    acField.style.display = 'flex'
     manualRollField.style.display = 'none'
     resultLabel.textContent = 'Target'
-    rollBtn.textContent = 'Roll d20'
   }
   updateResults()
   saveState()
