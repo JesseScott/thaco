@@ -1,6 +1,6 @@
 import './style.css'
 import OBR from '@owlbear-rodeo/sdk'
-import { clamp, calculateThreshold, isHit, impliedThaco } from './thaco.js'
+import { getNeededRoll, getHitAc, isHit } from './thaco.js'
 
 const app = document.querySelector('#app')
 
@@ -138,11 +138,10 @@ function updateResults() {
 
   if (isHitAcMode) {
     const roll = Number(manualRollInput.value)
-    const ac = thaco - bonus - roll
-    resultValue.textContent = `${ac}`
+    resultValue.textContent = `${getHitAc(thaco, bonus, roll)}`
   } else {
     const ac = Number(acInput.value)
-    const needed = clamp(calculateThreshold(thaco, ac, bonus), 1, 20)
+    const needed = getNeededRoll(thaco, ac, bonus)
     resultValue.textContent = `${needed}`
   }
   saveState()
@@ -183,8 +182,7 @@ function rollD20() {
     const thaco = Number(thacoInput.value)
     const ac = Number(acInput.value)
     const bonus = Number(bonusInput.value)
-    const threshold = calculateThreshold(thaco, ac, bonus)
-    const needed = clamp(threshold, 1, 20)
+    const needed = getNeededRoll(thaco, ac, bonus)
     const roll = Math.floor(Math.random() * 20) + 1
     const hit = isHit(roll, needed)
 

@@ -30,6 +30,12 @@ jobs:
         working-directory: THACO
       - run: npm test
         working-directory: THACO
+      - run: npx playwright install --with-deps chromium
+        working-directory: THACO
+      - run: npm run test:ui
+        working-directory: THACO
+        env:
+          CI: 'true'
       - run: npm run build
         working-directory: THACO
       - uses: actions/configure-pages@v5
