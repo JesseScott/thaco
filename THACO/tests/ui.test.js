@@ -45,3 +45,45 @@ test('THACO calculator persists state across reloads', async ({ page }) => {
   await expect(page.locator('#bonus-input')).toHaveValue('2');
   await expect(page.locator('#result-value')).toHaveText('11');
 });
+
+test('THACO calculator supports multiple entries', async ({ page }) => {
+  await page.goto('/');
+
+  // Initial entry
+  await page.fill('#entry-name-input', 'Longsword');
+  await page.fill('#thaco-input', '18');
+  await page.fill('#ac-input', '5');
+  await page.fill('#bonus-input', '2');
+  await expect(page.locator('#result-value')).toHaveText('11');
+
+  // Add a new entry
+  await page.click('#add-entry-btn');
+  await expect(page.locator('#entry-select')).toHaveValue('1');
+
+  // Fill new entry
+  await page.fill('#entry-name-input', 'Unarmed');
+  await page.fill('#thaco-input', '20');
+  await page.fill('#ac-input', '10');
+  await page.fill('#bonus-input', '0');
+  await expect(page.locator('#result-value')).toHaveText('10');
+
+  // Switch back to first entry
+  await page.selectOption('#entry-select', '0');
+  await expect(page.locator('#entry-name-input')).toHaveValue('Longsword');
+  await expect(page.locator('#thaco-input')).toHaveValue('18');
+  await expect(page.locator('#result-value')).toHaveText('11');
+
+  // Reload and check persistence
+  await page.reload();
+  await expect(page.locator('#entry-select')).toHaveValue('0');
+  await expect(page.locator('#entry-name-input')).toHaveValue('Longsword');
+
+  await page.selectOption('#entry-select', '1');
+  await expect(page.locator('#entry-name-input')).toHaveValue('Unarmed');
+  await expect(page.locator('#thaco-input')).toHaveValue('20');
+
+  // Delete an entry
+  await page.click('#delete-entry-btn');
+  await expect(page.locator('#entry-select')).toHaveCount(1);
+  await expect(page.locator('#entry-name-input')).toHaveValue('Longsword');
+});
