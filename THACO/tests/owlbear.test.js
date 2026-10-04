@@ -11,9 +11,18 @@ function hostPage(origin) {
 <iframe id="app" src="/?obrref=${encodeURIComponent(obrref)}" style="width:380px;height:460px;border:0"></iframe>
 <script>
   window.shown = [];
+  window.heights = [];
   const frame = document.getElementById('app');
   window.addEventListener('message', (event) => {
     const message = event.data;
+    if (message && message.id === 'OBR_ACTION_SET_HEIGHT') {
+      window.heights.push(message.data.height);
+      frame.contentWindow.postMessage(
+        { id: 'OBR_ACTION_SET_HEIGHT_RESPONSE' + message.nonce, data: {} },
+        location.origin
+      );
+      return;
+    }
     if (!message || message.id !== 'OBR_NOTIFICATION_SHOW') return;
     window.shown.push(message.data.message);
     frame.contentWindow.postMessage(
@@ -42,7 +51,12 @@ async function openInOwlbear(page, baseURL) {
   await expect(app.locator('#roll-btn')).toBeVisible();
   // Give the handshake a moment so the notifier is marked ready.
   await page.waitForTimeout(200);
-  return { app, errors, shown: () => page.evaluate(() => window.shown) };
+  return {
+    app,
+    errors,
+    shown: () => page.evaluate(() => window.shown),
+    heights: () => page.evaluate(() => window.heights),
+  };
 }
 
 test('rolling inside Owlbear shows a HIT/MISS notification', async ({ page, baseURL }) => {
@@ -87,4 +101,28 @@ test('rolling outside Owlbear works without errors', async ({ page }) => {
 
   await expect(page.locator('#roll-output')).not.toHaveClass(/empty/);
   expect(errors).toEqual([]);
+});
+
+test('the popover height is sized to the content', async ({ page, baseURL }) => {
+  const { app, errors, heights } = await openInOwlbear(page, baseURL);
+
+  await expect.poll(async () => (await heights()).length).toBeGreaterThan(0);
+  const collapsed = (await heights()).at(-1);
+  const contentHeight = await app.locator('#app').evaluate((el) => el.offsetHeight);
+  expect(collapsed).toBe(contentHeight);
+  expect(collapsed).toBeGreaterThan(250);
+  expect(collapsed).toBeLessThan(400);
+  expect(errors).toEqual([]);
+});
+
+test('opening the profile accordion grows the popover and closing shrinks it', async ({ page, baseURL }) => {
+  const { app, heights } = await openInOwlbear(page, baseURL);
+  await expect.poll(async () => (await heights()).length).toBeGreaterThan(0);
+  const collapsed = (await heights()).at(-1);
+
+  await app.locator('#entry-accordion summary').click();
+  await expect.poll(async () => (await heights()).at(-1)).toBeGreaterThan(collapsed);
+
+  await app.locator('#entry-accordion summary').click();
+  await expect.poll(async () => (await heights()).at(-1)).toBe(collapsed);
 });

@@ -83,7 +83,8 @@ test('THACO calculator supports multiple entries', async ({ page }) => {
   // Reload and check persistence
   await page.reload();
   await expect(page.locator('#entry-summary-name')).toHaveText('Longsword');
-  await page.click('#entry-accordion summary');
+  // The accordion was left open, and stays open after a reload
+  await expect(page.locator('#entry-accordion')).toHaveAttribute('open', '');
   await expect(page.locator('#entry-select')).toHaveValue('0');
   await expect(page.locator('#entry-name-input')).toHaveValue('Longsword');
 
@@ -95,4 +96,22 @@ test('THACO calculator supports multiple entries', async ({ page }) => {
   await page.click('#delete-entry-btn');
   await expect(page.locator('#entry-select')).toHaveCount(1);
   await expect(page.locator('#entry-name-input')).toHaveValue('Longsword');
+});
+
+test('profile accordion remembers whether it was open', async ({ page }) => {
+  const savedOpen = () =>
+    page.evaluate(() => JSON.parse(localStorage.getItem('thaco-calculator-state-v2')).accordionOpen);
+
+  await page.goto('/');
+  await expect(page.locator('#entry-accordion')).not.toHaveAttribute('open', '');
+
+  await page.click('#entry-accordion summary');
+  await expect.poll(savedOpen).toBe(true);
+  await page.reload();
+  await expect(page.locator('#entry-accordion')).toHaveAttribute('open', '');
+
+  await page.click('#entry-accordion summary');
+  await expect.poll(savedOpen).toBe(false);
+  await page.reload();
+  await expect(page.locator('#entry-accordion')).not.toHaveAttribute('open', '');
 });
