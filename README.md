@@ -6,17 +6,27 @@ An [Owlbear.Rodeo](https://www.owlbear.rodeo/) extension for calculating your TH
 
 ![THACO calculator](docs/screenshot.png)
 
+## Install in Owlbear Rodeo
+
+1. In Owlbear Rodeo, open your profile menu and choose **Add Custom Extension**.
+2. Paste this manifest URL:
+
+   ```
+   https://jessescott.github.io/thaco/manifest.json
+   ```
+
+3. Open a scene and click the THACO d20 icon in the toolbar.
+
+If the popover looks stale or blank after an update, hard reload the page (Ctrl+Shift+R).
+
 ## Features
 
 - Enter your THAC0, the target's Armor Class and your attack bonus to get the d20 roll you need (clamped to 1-20).
 - Roll a d20 and see whether it hits or misses. A natural 20 always hits and a natural 1 always misses. Results are shown as an Owlbear notification.
-- "Calculate hit AC instead" mode: enter (or roll) a d20 and see which Armor Class it hits.
-- Your inputs are remembered between sessions.
-
-## Install in Owlbear Rodeo
-
-1. In Owlbear Rodeo, open your profile menu and choose **Add Custom Extension**.
-2. Paste the manifest URL: `https://jessescott.github.io/thaco/manifest.json`
+- "Calculate Hit AC" mode: enter (or roll) a d20 and see which Armor Class it hits.
+- Named profiles (e.g. "Longsword", "Unarmed") you can add, rename, switch between and delete from the collapsible Profile row.
+- Everything is remembered between sessions in the browser, including whether the Profile row is open.
+- The popover resizes itself to fit the calculator.
 
 ## Development
 
