@@ -2,6 +2,7 @@ import './style.css'
 import OBR from '@owlbear-rodeo/sdk'
 import { getNeededRoll, getHitAc, isHit } from './thaco.js'
 import { createNotifier } from './notify.js'
+import { syncPopoverHeight } from './popover.js'
 
 const app = document.querySelector('#app')
 
@@ -90,11 +91,13 @@ const acField = document.getElementById('ac-field')
 const manualRollField = document.getElementById('manual-roll-field')
 const entrySelect = document.getElementById('entry-select')
 const entryNameInput = document.getElementById('entry-name-input')
+const entryAccordion = document.getElementById('entry-accordion')
 const entrySummaryName = document.getElementById('entry-summary-name')
 const addEntryBtn = document.getElementById('add-entry-btn')
 const deleteEntryBtn = document.getElementById('delete-entry-btn')
 
 const notify = createNotifier(OBR)
+syncPopoverHeight(OBR, app)
 
 const STORAGE_KEY = 'thaco-calculator-state-v2'
 const OLD_STORAGE_KEY = 'thaco-calculator-state'
@@ -112,6 +115,7 @@ let state = {
   currentEntryIndex: 0,
   manualRoll: '10',
   isHitAcMode: false,
+  accordionOpen: false,
 }
 
 const isNumeric = (value) => value !== '' && Number.isFinite(Number(value))
@@ -127,6 +131,7 @@ function saveState() {
   }
   state.manualRoll = manualRollInput.value
   state.isHitAcMode = modeToggle.checked
+  state.accordionOpen = entryAccordion.open
 
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
@@ -160,6 +165,7 @@ function loadState() {
             : 0
         if (isNumeric(parsed.manualRoll)) state.manualRoll = parsed.manualRoll
         state.isHitAcMode = parsed.isHitAcMode === true
+        state.accordionOpen = parsed.accordionOpen === true
       }
     } else {
       // Migrate from the single-entry v1 format
@@ -210,6 +216,7 @@ function applyCurrentEntry() {
     manualRollInput.value = state.manualRoll
     modeToggle.checked = state.isHitAcMode
   }
+  entryAccordion.open = state.accordionOpen
 }
 
 function updateResults() {
@@ -350,6 +357,7 @@ entrySelect.addEventListener('change', switchEntry)
 addEntryBtn.addEventListener('click', addEntry)
 deleteEntryBtn.addEventListener('click', deleteEntry)
 entryNameInput.addEventListener('input', updateEntryName)
+entryAccordion.addEventListener('toggle', saveState)
 
 loadState()
 toggleMode()
