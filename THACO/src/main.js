@@ -1,6 +1,7 @@
 import './style.css'
 import OBR from '@owlbear-rodeo/sdk'
 import { getNeededRoll, getHitAc, isHit } from './thaco.js'
+import { createNotifier } from './notify.js'
 
 const app = document.querySelector('#app')
 
@@ -93,18 +94,7 @@ const entrySummaryName = document.getElementById('entry-summary-name')
 const addEntryBtn = document.getElementById('add-entry-btn')
 const deleteEntryBtn = document.getElementById('delete-entry-btn')
 
-// OBR calls only work inside Owlbear Rodeo; skip them when opened standalone
-let obrReady = false
-if (OBR.isAvailable) {
-  OBR.onReady(() => {
-    obrReady = true
-  })
-}
-
-function notify(message) {
-  if (!obrReady) return
-  OBR.notification.show(message).catch(() => {})
-}
+const notify = createNotifier(OBR)
 
 const STORAGE_KEY = 'thaco-calculator-state-v2'
 const OLD_STORAGE_KEY = 'thaco-calculator-state'
