@@ -47,8 +47,9 @@ To try a local build inside Owlbear, run `npm run dev` and add `http://localhost
 
 ## CI and deployment
 
-- `Build and Test` runs the build, unit tests and UI tests on every push and PR to `main`.
-- `Deploy to GitHub Pages` runs the same tests, then publishes `THACO/dist` on every push to `main`. Pages must be set to the **GitHub Actions** source in the repository settings.
+- `Build and Test` installs dependencies, builds, and runs the unit tests and UI tests on every push and PR to `main`. Node comes from `.node-version`.
+- On a push to `main` (or a manual run), once those pass, its `deploy` job publishes `THACO/dist` to GitHub Pages. Pages must be set to the **GitHub Actions** source in the repository settings.
+- Dependabot opens weekly PRs for npm packages and GitHub Actions.
 
 ## License
 
