@@ -1,29 +1,30 @@
+/* Red box theme: the 1983 D&D Basic Set. Red cover, gold trim, parchment, ink. */
 :root {
-  --bg: #0f172a;
-  --panel: #1e293b;
-  --panel-elevated: #334155;
-  --text: #f1f5f9;
-  --text-muted: #94a3b8;
-  --text-h: #ffffff;
-  --border: #334155;
-  --accent: #6366f1;
-  --accent-hover: #818cf8;
-  --accent-soft: rgba(99, 102, 241, 0.1);
-  --success: #10b981;
-  --error: #ef4444;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --red: #b3202a;
+  --red-deep: #7d1219;
+  --red-dark: #4e0b10;
+  --gold: #e3b54a;
+  --gold-dim: #b88a2c;
+  --parchment: #f4e6c3;
+  --parchment-edge: #c9a66b;
+  --ink: #24140c;
+  --ink-soft: #5a3b24;
+  --cream: #f8edd2;
+  --tan: #ecd09a;
+  --success: #1f6b34;
+  --error: #9c1b1b;
+  --shadow: 0 2px 6px rgb(0 0 0 / 0.35);
+  --shadow-lg: 0 8px 18px rgb(0 0 0 / 0.45);
 
-  --sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --serif: 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, 'Times New Roman', serif;
+  --display: 'Trajan Pro', Cinzel, 'Palatino Linotype', Palatino, Georgia, serif;
 
   font-size: 16px;
   line-height: 1.5;
-  font-family: var(--sans);
-  color-scheme: dark;
-  color: var(--text);
-  background: var(--bg);
+  font-family: var(--serif);
+  color-scheme: light;
+  color: var(--cream);
+  background: var(--red-deep);
 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -36,7 +37,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%);
+  background: radial-gradient(circle at top, var(--red) 0%, var(--red-deep) 60%, var(--red-dark) 100%);
 }
 
 #app {
@@ -47,20 +48,25 @@ body {
 }
 
 .panel {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  background: var(--red);
+  border: 3px double var(--gold);
+  border-radius: 6px;
   padding: 12px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-lg), inset 0 0 0 1px var(--red-dark);
 }
 
 h1 {
   margin: 0 0 10px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--gold-dim);
   text-align: center;
+  font-family: var(--display);
   font-size: 18px;
   font-weight: 700;
-  letter-spacing: -0.025em;
-  color: var(--text-h);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-shadow: 0 1px 0 var(--red-dark), 0 0 8px rgb(0 0 0 / 0.35);
 }
 
 .calculator {
@@ -69,10 +75,11 @@ h1 {
   gap: 10px;
 }
 
+/* Profiles accordion */
 .entry-accordion {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  background: var(--red-deep);
+  border: 1px solid var(--gold-dim);
+  border-radius: 4px;
 }
 
 .entry-accordion summary {
@@ -94,8 +101,8 @@ h1 {
   width: 7px;
   height: 7px;
   margin-left: auto;
-  border-right: 2px solid var(--text-muted);
-  border-bottom: 2px solid var(--text-muted);
+  border-right: 2px solid var(--gold);
+  border-bottom: 2px solid var(--gold);
   transform: rotate(45deg);
   transition: transform 0.2s;
 }
@@ -105,17 +112,18 @@ h1 {
 }
 
 .entry-accordion summary:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--accent-soft);
-  border-radius: 10px;
+  outline: 2px solid var(--gold);
+  outline-offset: -2px;
+  border-radius: 4px;
 }
 
 .entry-summary-label {
+  font-family: var(--display);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  color: var(--tan);
 }
 
 .entry-summary-name {
@@ -123,9 +131,9 @@ h1 {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 14px;
-  font-family: var(--mono);
-  color: var(--text-h);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--cream);
 }
 
 .entry-management {
@@ -143,12 +151,13 @@ h1 {
 .entry-controls select {
   flex: 1;
   min-width: 0;
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: 1px solid var(--parchment-edge);
+  border-radius: 4px;
   padding: 8px 10px;
+  font-family: var(--serif);
   font-size: 14px;
-  color: var(--text-h);
-  background: var(--bg);
+  color: var(--ink);
+  background: var(--parchment);
   cursor: pointer;
 }
 
@@ -158,35 +167,43 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--panel-elevated);
-  color: var(--text-h);
+  border: 1px solid var(--gold-dim);
+  border-radius: 4px;
+  background: var(--red-dark);
+  color: var(--gold);
+  font-family: var(--serif);
   font-size: 18px;
-  font-weight: 500;
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.2s;
 }
 
 .entry-controls button:hover {
-  background: #475569;
+  background: var(--red-deep);
+  border-color: var(--gold);
 }
 
 .entry-controls .delete-btn {
-  color: #f87171;
+  color: var(--cream);
 }
 
 #entry-name-input {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  background: var(--parchment);
+  border: 1px solid var(--parchment-edge);
+  border-radius: 4px;
   padding: 8px 10px;
+  font-family: var(--serif);
   font-size: 14px;
-  font-family: var(--mono);
-  color: var(--text-h);
+  color: var(--ink);
   width: 100%;
 }
 
+#entry-name-input::placeholder {
+  color: var(--ink-soft);
+  opacity: 0.7;
+}
+
+/* Number fields */
 .input-group {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -201,49 +218,48 @@ h1 {
 }
 
 .field span {
+  font-family: var(--display);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  color: var(--tan);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-input[type="number"],
-#entry-name-input {
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
 .field input {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  background: var(--parchment);
+  border: 1px solid var(--parchment-edge);
+  border-radius: 4px;
   padding: 8px 10px;
-  font-size: 15px;
-  font-family: var(--mono);
-  color: var(--text-h);
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
   width: 100%;
+  box-shadow: inset 0 1px 3px rgb(80 50 20 / 0.25);
 }
 
 .field input:focus,
 #entry-name-input:focus,
 .entry-controls select:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
 }
 
+/* Result banner: the black title strip */
 .results {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  background: var(--accent-soft);
-  border: 1px solid var(--accent);
-  border-radius: 12px;
+  background: var(--ink);
+  border: 1px solid var(--gold);
+  border-radius: 4px;
   padding: 8px 12px;
+  box-shadow: inset 0 0 0 2px var(--ink), inset 0 0 0 3px var(--gold-dim);
 }
 
 .mode-toggle {
@@ -251,7 +267,8 @@ input[type="number"],
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 700;
+  color: var(--tan);
   cursor: pointer;
   user-select: none;
 }
@@ -259,7 +276,7 @@ input[type="number"],
 .mode-toggle input {
   width: 16px;
   height: 16px;
-  accent-color: var(--accent);
+  accent-color: var(--red);
   cursor: pointer;
 }
 
@@ -270,20 +287,22 @@ input[type="number"],
 }
 
 #result-label {
+  font-family: var(--display);
   font-size: 12px;
-  font-weight: 600;
-  color: var(--accent-hover);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--gold);
   text-transform: uppercase;
 }
 
 #result-value {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
-  color: var(--text-h);
-  font-family: var(--mono);
+  color: var(--cream);
   line-height: 1.2;
 }
 
+/* Buttons */
 .actions {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -292,73 +311,89 @@ input[type="number"],
 
 .actions button {
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: 4px;
+  font-family: var(--display);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: all 0.2s;
-  border: none;
 }
 
 #roll-btn {
-  background: var(--accent);
-  color: white;
+  background: linear-gradient(var(--gold), var(--gold-dim));
+  color: var(--red-dark);
+  border: 1px solid var(--red-dark);
   font-size: 15px;
-}
-
-#roll-btn:hover {
-  background: var(--accent-hover);
   box-shadow: var(--shadow);
 }
 
+#roll-btn:hover {
+  background: linear-gradient(#f0c75e, var(--gold));
+}
+
 #reset-btn {
-  background: var(--panel-elevated);
-  color: var(--text);
-  border: 1px solid var(--border);
+  background: var(--red-dark);
+  color: var(--tan);
+  border: 1px solid var(--gold-dim);
 }
 
 #reset-btn:hover {
-  background: #475569;
+  background: var(--red-deep);
+  border-color: var(--gold);
 }
 
+#roll-btn:focus-visible,
+#reset-btn:focus-visible {
+  outline: 2px solid var(--cream);
+  outline-offset: 2px;
+}
+
+/* Roll output: a parchment slip */
 .roll-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background: var(--parchment);
+  border: 1px solid var(--parchment-edge);
+  border-radius: 4px;
   padding: 8px 14px;
+  color: var(--ink);
+  box-shadow: inset 0 1px 3px rgb(80 50 20 / 0.25);
   transition: opacity 0.3s;
 }
 
 .roll-output.empty .roll-card {
-  opacity: 0.5;
+  opacity: 0.6;
 }
 
 .roll-label {
+  font-family: var(--display);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
 }
 
 .roll-value {
-  font-size: 32px;
-  font-weight: 800;
-  font-family: var(--mono);
-  color: var(--text-h);
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--ink);
   line-height: 1;
 }
 
 .roll-result {
-  min-width: 48px;
+  min-width: 56px;
   text-align: right;
+  font-family: var(--display);
   font-size: 14px;
   font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+  color: var(--ink-soft);
 }
 
 .roll-result.hit {
